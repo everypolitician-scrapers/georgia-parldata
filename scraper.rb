@@ -100,7 +100,6 @@ def term_memberships(person)
       end_date: earliest_date(gm.xpath('end_date').text, term[:end_date]),
     }
   }
-  # }.reject { |tm| tm[:id].to_i == 1 } # no faction information available for term 1
 end
 
 def group_memberships(person)
@@ -123,15 +122,13 @@ def people
 end
 
 
-# ScraperWiki.save_sqlite([:id], terms, 'terms')
+ScraperWiki.save_sqlite([:id], terms, 'terms')
 people.each do |person|
   person.xpath('changes').each { |m| m.remove } # make eyeballing easier
   person_data = person_data(person)
   combine(term: term_memberships(person), faction_id: group_memberships(person)).each do |mem|
-    data = person_data.merge(mem)
-    # data[:faction] = groups.find(->{{name: 'Independent'}}) { |g| g[:id] == mem[:faction_id] }[:name]
-    puts data
-    # ScraperWiki.save_sqlite([:id, :term, :faction_id, :start_date], data.reject { |k,v| v.to_s.empty? })
+    data = person_data.merge(mem).reject { |k, v| v.to_s.empty? }
+    ScraperWiki.save_sqlite([:id, :term, :faction_id, :start_date], data)
   end
 end
 
