@@ -1,4 +1,10 @@
 GIT
+  remote: https://github.com/everypolitician/combine_popolo_memberships.git
+  revision: 18ed58f99acd66bb59b44d7f8d9c409e339fe2f9
+  specs:
+    combine_popolo_memberships (0.1.0)
+
+GIT
   remote: https://github.com/openaustralia/scraperwiki-ruby.git
   revision: fc50176812505e463077d5c673d504a6a234aa78
   branch: morph_defaults
@@ -45,8 +51,12 @@ PLATFORMS
 
 DEPENDENCIES
   colorize
+  combine_popolo_memberships!
   nokogiri
   open-uri-cached
   pry
   rest-client
   scraperwiki!
+
+BUNDLED WITH
+   1.10.6
