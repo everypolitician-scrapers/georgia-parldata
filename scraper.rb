@@ -7,6 +7,7 @@ require 'open-uri'
 require 'colorize'
 require 'rest-client'
 require 'csv'
+require 'combine_popolo_memberships'
 
 require 'pry'
 require 'open-uri/cached'
@@ -31,30 +32,6 @@ end
 def latest_date(*dates)
   dates.compact.reject(&:empty?).sort.last
 end 
-
-def overlap(mem, term)
-  mS = mem[:start_date].to_s.empty?  ? '0000-00-00' : mem[:start_date].to_s
-  mE = mem[:end_date].to_s.empty?    ? '9999-99-99' : mem[:end_date].to_s
-  tS = term[:start_date].to_s.empty? ? '0000-00-00' : term[:start_date].to_s
-  tE = term[:end_date].to_s.empty?   ? '9999-99-99' : term[:end_date].to_s
-
-  return unless mS < tE && mE > tS
-  (s, e) = [mS, mE, tS, tE].sort[1,2]
-  return { 
-    _data: [mem, term],
-    start_date: s == '0000-00-00' ? nil : s,
-    end_date:   e == '9999-99-99' ? nil : e,
-  }
-end
-
-def combine(h)
-  into_name, into_data, from_name, from_data = h.flatten
-  from_data.product(into_data).map { |a,b| overlap(a,b) }.compact.map { |h|
-    data = h.delete :_data
-    h.merge({ from_name => data.first[:id], into_name => data.last[:id] })
-  }.sort_by { |h| h[:start_date] }
-end
-
 
 def terms
   @terms ||= noko_q('organizations', where: %Q[{"classification":"chamber"}] ).map do |chamber|
@@ -126,7 +103,7 @@ ScraperWiki.save_sqlite([:id], terms, 'terms')
 people.each do |person|
   person.xpath('changes').each { |m| m.remove } # make eyeballing easier
   person_data = person_data(person)
-  combine(term: term_memberships(person), faction_id: group_memberships(person)).each do |mem|
+  CombinePopoloMemberships.combine(term: term_memberships(person), faction_id: group_memberships(person)).each do |mem|
     data = person_data.merge(mem).reject { |k, v| v.to_s.empty? }
     ScraperWiki.save_sqlite([:id, :term, :faction_id, :start_date], data)
   end
